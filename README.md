@@ -1,48 +1,111 @@
-Overview
-========
+# JéGO Data Warehouse
 
-Welcome to Astronomer! This project was generated after you ran 'astro dev init' using the Astronomer CLI. This readme describes the contents of the project, as well as how to run Apache Airflow on your local machine.
+## Overview
+The JéGO Data Warehouse project is a centralized data infrastructure designed to collect, transform, and store data from various sources across all company products. This initiative serves as the backbone for advanced analytics, reporting, and decision-making.
 
-Project Contents
-================
+Currently, the first pipeline has been implemented to ingest **weather data** into a PostgreSQL database for now, marking the initial step in building the broader data ecosystem.
 
-Your Astro project contains the following files and folders:
+---
 
-- dags: This folder contains the Python files for your Airflow DAGs. By default, this directory includes one example DAG:
-    - `example_astronauts`: This DAG shows a simple ETL pipeline example that queries the list of astronauts currently in space from the Open Notify API and prints a statement for each astronaut. The DAG uses the TaskFlow API to define tasks in Python, and dynamic task mapping to dynamically print a statement for each astronaut. For more on how this DAG works, see our [Getting started tutorial](https://www.astronomer.io/docs/learn/get-started-with-airflow).
-- Dockerfile: This file contains a versioned Astro Runtime Docker image that provides a differentiated Airflow experience. If you want to execute other commands or overrides at runtime, specify them here.
-- include: This folder contains any additional files that you want to include as part of your project. It is empty by default.
-- packages.txt: Install OS-level packages needed for your project by adding them to this file. It is empty by default.
-- requirements.txt: Install Python packages needed for your project by adding them to this file. It is empty by default.
-- plugins: Add custom or community plugins for your project to this file. It is empty by default.
-- airflow_settings.yaml: Use this local-only file to specify Airflow Connections, Variables, and Pools instead of entering them in the Airflow UI as you develop DAGs in this project.
+## Current Implementation
 
-Deploy Your Project Locally
-===========================
+### Weather Data Pipeline
+The first module of the JeGO Data Warehouse focuses on weather data for Lagos, Nigeria. This pipeline uses **Apache Airflow** for orchestration and consists of the following components:
 
-1. Start Airflow on your local machine by running 'astro dev start'.
+1. **Extract**:
+   - Data is fetched from the **Open Meteo API**, capturing real-time weather information for Lagos.
+   - Extracted fields include:
+     - Latitude and Longitude
+     - Temperature
+     - Wind Speed
+     - Wind Direction
+     - Weather Code
 
-This command will spin up 4 Docker containers on your machine, each for a different Airflow component:
+2. **Transform**:
+   - The raw data is processed into a structured format to align with the database schema.
+   - Ensures data consistency and readiness for integration with future modules.
 
-- Postgres: Airflow's Metadata Database
-- Webserver: The Airflow component responsible for rendering the Airflow UI
-- Scheduler: The Airflow component responsible for monitoring and triggering tasks
-- Triggerer: The Airflow component responsible for triggering deferred tasks
+3. **Load**:
+   - Transformed data is loaded into a **PostgreSQL** database.
+   - A table named `weather_data` is created (if it does not already exist) with the following schema:
+     - **latitude**: FLOAT
+     - **longitude**: FLOAT
+     - **temperature**: FLOAT
+     - **windspeed**: FLOAT
+     - **winddirection**: FLOAT
+     - **weathercode**: INT
+     - **timestamp**: TIMESTAMP (default to the current timestamp)
 
-2. Verify that all 4 Docker containers were created by running 'docker ps'.
+### Technologies Used
+- **Apache Airflow**: Orchestrates the ETL process with daily scheduling.
+- **PostgreSQL**: Serves as the initial data warehouse for storing weather data.
+- **Python**: Implements ETL logic and Airflow tasks.
 
-Note: Running 'astro dev start' will start your project with the Airflow Webserver exposed at port 8080 and Postgres exposed at port 5432. If you already have either of those ports allocated, you can either [stop your existing Docker containers or change the port](https://www.astronomer.io/docs/astro/cli/troubleshoot-locally#ports-are-not-available-for-my-local-airflow-webserver).
+---
 
-3. Access the Airflow UI for your local Airflow project. To do so, go to http://localhost:8080/ and log in with 'admin' for both your Username and Password.
+## Scope and Vision
 
-You should also be able to access your Postgres Database at 'localhost:5432/postgres'.
+### Broader Vision
+The JeGO Data Warehouse aims to integrate data from all products, enabling a unified platform for analytics and reporting. This includes, but is not limited to:
+- **Energy Systems**:
+  - Voltage Output
+  - Inverter Performance
+  - Temperature Differentials
+  - Degradation Rates
+  - Current Output
+  - Power Generation (Watts)
+  - Energy Production (Kilowatt-Hours)
+  - Panel Efficiency Percentage
+- **Sales and Marketing**:
+  - Product Performance Metrics
+  - Customer Behavior Insights
+  - Sales Trends Analysis
+- **Operational Data**:
+  - Logistics and Supply Chain Performance
+  - Staff Efficiency Metrics
 
-Deploy Your Project to Astronomer
-=================================
+### Current Focus
+- Develop a robust pipeline for **weather data** as a proof of concept.
+- Establish a scalable data warehouse architecture.
 
-If you have an Astronomer account, pushing code to a Deployment on Astronomer is simple. For deploying instructions, refer to Astronomer documentation: https://www.astronomer.io/docs/astro/deploy-code/
+### Next Steps
+1. **Integrate Additional Data Points**:
+   - Expand the scope to include operational and product-specific data streams.
+2. **Migrate to Cloud Storage**:
+   - Transition from PostgreSQL to a cloud-based solution like AWS S3 or Google BigQuery.
+3. **Advanced Analytics**:
+   - Use the data warehouse as the foundation for dashboards, predictive analytics, and machine learning models.
+4. **Real-Time Monitoring**:
+   - Enable real-time alerts and triggers for operational insights.
 
-Contact
-=======
+---
 
-The Astronomer CLI is maintained with love by the Astronomer team. To report a bug or suggest a change, reach out to our support.
+## Getting Started
+
+### Local Development
+1. **Prerequisites**:
+   - Install Docker and Astronomer CLI.
+   - Configure Airflow and PostgreSQL connections in `airflow_settings.yaml`.
+
+2. **Run the Project**:
+   - Start the local environment:
+     ```bash
+     astro dev start
+     ```
+   - Access the Airflow UI at [http://localhost:8080](http://localhost:8080) with:
+     - Username: `admin`
+     - Password: `admin`
+
+3. **Database Connection**:
+   - Default PostgreSQL setup:
+     - Host: `localhost`
+     - Port: `5432`
+     - Database: `postgres`
+
+4. **Test the Pipeline**:
+   - Trigger the `weather_etl_pipeline` DAG in the Airflow UI or let it run on its daily schedule.
+
+### Deploying to Production
+1. Deploy the pipeline to an Astronomer-managed Airflow environment:
+   ```bash
+   astro deploy
